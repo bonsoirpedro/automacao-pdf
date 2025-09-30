@@ -17,7 +17,7 @@ def get_desktop_path():
 
 def mover_pdfs():
     desktop = get_desktop_path()
-    destino = os.path.join(os.path.expanduser("~"), "Documentos", "PDFs")
+    destino = os.path.join(desktop, "pdf")
 
     os.makedirs(destino, exist_ok=True)
 
@@ -25,8 +25,10 @@ def mover_pdfs():
         if arquivo.lower().endswith('.pdf'):
             origem = os.path.join(desktop, arquivo)
             destino_final = os.path.join(destino, arquivo)
-            shutil.move(origem, destino_final)
-            print(f'Movido: {arquivo} para {destino}')
+            
+            if origem != destino_final:
+                shutil.move(origem, destino_final)
+                print(f'Movido: {arquivo} para {destino}')
 
 if __name__ == "__main__":
     mover_pdfs()
