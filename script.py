@@ -17,7 +17,7 @@ def get_desktop_path():
 
 def mover_pdfs():
     desktop = get_desktop_path()
-    destino = os.path.join(desktop, "pdf")
+    destino = os.path.join(desktop, "PDFs")
 
     os.makedirs(destino, exist_ok=True)
 
