@@ -1,34 +1,61 @@
 import os
 import shutil
+import platform
 
 def get_desktop_path():
-    # Tenta os caminhos mais comuns para a área de trabalho no Windows
+    """Retorna o caminho da área de trabalho de forma multiplataforma."""
     home = os.path.expanduser("~")
-    possiveis_caminhos = [
-        os.path.join(home, "Área de Trabalho"),
+
+    # Lista de possíveis caminhos para a área de trabalho
+    # A ordem de verificação é importante
+    paths_to_check = [
         os.path.join(home, "Desktop"),
-        os.path.join(home, "OneDrive", "Área de Trabalho"),
-        os.path.join(home, "OneDrive", "Desktop"),
+        os.path.join(home, "Área de Trabalho"),
     ]
-    for caminho in possiveis_caminhos:
-        if os.path.exists(caminho):
-            return caminho
-    raise FileNotFoundError("Não foi possível localizar a Área de Trabalho.")
+
+    # No Windows, adiciona os caminhos do OneDrive à verificação
+    if platform.system() == "Windows":
+        paths_to_check.extend([
+            os.path.join(home, "OneDrive", "Desktop"),
+            os.path.join(home, "OneDrive", "Área de Trabalho"),
+        ])
+
+    for path in paths_to_check:
+        if os.path.exists(path):
+            return path
+
+    raise FileNotFoundError("Não foi possível localizar a pasta da Área de Trabalho (Desktop).")
 
 def mover_pdfs():
-    desktop = get_desktop_path()
-    destino = os.path.join(desktop, "PDFs")
+    """Move todos os arquivos PDF da área de trabalho para uma subpasta 'PDFs'."""
+    try:
+        desktop = get_desktop_path()
+    except FileNotFoundError as e:
+        print(e)
+        return
 
-    os.makedirs(destino, exist_ok=True)
+    destino_dir = os.path.join(desktop, "PDFs")
+    os.makedirs(destino_dir, exist_ok=True)
 
+    arquivos_movidos = 0
     for arquivo in os.listdir(desktop):
-        if arquivo.lower().endswith('.pdf'):
-            origem = os.path.join(desktop, arquivo)
-            destino_final = os.path.join(destino, arquivo)
-            
-            if origem != destino_final:
-                shutil.move(origem, destino_final)
-                print(f'Movido: {arquivo} para {destino}')
+        # Garante que estamos lidando apenas com arquivos e que eles são PDFs
+        origem = os.path.join(desktop, arquivo)
+        if arquivo.lower().endswith('.pdf') and os.path.isfile(origem):
+            try:
+                shutil.move(origem, destino_dir)
+                print(f'Movido: {arquivo}')
+                arquivos_movidos += 1
+            except shutil.Error as e:
+                print(f"Erro ao mover o arquivo {arquivo}: {e}")
+
+    if arquivos_movidos > 0:
+        print(f"\nTotal de {arquivos_movidos} arquivo(s) PDF movido(s) para '{destino_dir}'.")
+    else:
+        print("\nNenhum arquivo PDF encontrado para mover.")
 
 if __name__ == "__main__":
     mover_pdfs()
+    # No Windows, pausa a execução para que a janela do console não feche imediatamente
+    if platform.system() == "Windows":
+        input("\nPressione Enter para sair...")
